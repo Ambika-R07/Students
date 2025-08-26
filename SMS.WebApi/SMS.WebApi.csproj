@@ -16,8 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\model\Domain.csproj" />
-    <ProjectReference Include="..\Student.Services\SMS.Services.csproj" />
-    <ProjectReference Include="..\Students.DataAccess\SMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\SMS.Services\SMS.Services.csproj" />
+    <ProjectReference Include="..\SMS.Infrastructure\SMS.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
