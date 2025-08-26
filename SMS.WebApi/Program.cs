@@ -7,7 +7,6 @@ using SMS.WebApi.Middleware;
 
 try
 {
-   
     Log.Logger = new LoggerConfiguration()
         .ReadFrom.Configuration(new ConfigurationBuilder()
             .AddJsonFile("appsettings.json")
@@ -20,10 +19,8 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-   
     builder.Host.UseSerilog();
 
-    
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
@@ -38,7 +35,6 @@ try
 
     var app = builder.Build();
 
-    
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -49,12 +45,13 @@ try
         });
     }
 
-    
+   app.UseHttpsRedirection();
+
     app.UseGlobalExceptionHandler();
 
     app.MapControllers();
 
-    app.Run();
+    app.Run(); 
 }
 catch (Exception ex)
 {
