@@ -1,8 +1,11 @@
-﻿using Serilog;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Serilog;
 using System.Net;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace SMS.WebAPI.Middleware
+namespace SMS.WebApi.Middleware
 {
     public class ExceptionHandlingMiddleware
     {
@@ -17,7 +20,7 @@ namespace SMS.WebAPI.Middleware
         {
             try
             {
-                await _next(context); 
+                await _next(context);
             }
             catch (Exception ex)
             {
@@ -29,13 +32,21 @@ namespace SMS.WebAPI.Middleware
                 var response = new
                 {
                     StatusCode = context.Response.StatusCode,
-                    Message = "An unexpected error occurred. Please try again later.",
+                    Message = "An unexpected error occurred. Please contact support.",
                     TraceId = context.TraceIdentifier
                 };
 
-                var json = JsonSerializer.Serialize(response);
-                await context.Response.WriteAsync(json);
+                var jsonResponse = JsonSerializer.Serialize(response);
+                await context.Response.WriteAsync(jsonResponse);
             }
+        }
+    }
+
+    public static class ExceptionHandlingMiddlewareExtensions
+    {
+        public static IApplicationBuilder UseGlobalExceptionHandler(this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<ExceptionHandlingMiddleware>();
         }
     }
 }
