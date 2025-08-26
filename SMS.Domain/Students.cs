@@ -1,11 +1,11 @@
-﻿namespace SMS.WebApi.Domain
-{
-    public class Student
-    {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+﻿//namespace SMS.WebApi.Domain
+//{
+//    public class Student
+//    {
+//        public int Id { get; set; }
 
-        public string FullName => $"{FirstName} {LastName}";
-    }
-}
+//        public string Name { get; set; } = string.Empty;
+
+//        public int Age { get; set; }
+//    }
+//}
