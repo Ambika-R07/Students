@@ -6,11 +6,11 @@ namespace SMS.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class StudentController : ControllerBase
+    public class TestController : ControllerBase
     {
-        private readonly ILogger<StudentController> _logger;
+        private readonly ILogger<TestController> _logger;
 
-        public StudentController(ILogger<StudentController> logger)
+        public TestController(ILogger<TestController> logger)
         {
             _logger = logger;
         }
@@ -23,3 +23,4 @@ namespace SMS.WebApi.Controllers
         }
     }
 }
+

@@ -27,7 +27,7 @@ namespace SMS.WebApi.Middleware
                 Log.Error(ex, "Unhandled exception occurred");
 
                 context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
                 var response = new
                 {
