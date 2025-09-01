@@ -1,25 +1,29 @@
-﻿//using Microsoft.EntityFrameworkCore;
-//using SMS.Domain.Entities;
-//using System.Collections.Generic;
-//using System.Reflection.Emit;
+﻿using Microsoft.EntityFrameworkCore;
+using SMS.WebApi.Domain;
 
-//namespace SMS.Infrastructure.Data
-//{
-//    public class AppDbContext : DbContext
-//    {
-//        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+namespace SMS.Infrastructure.Data
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-//        public DbSet<Student> Students { get; set; } = null!;
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
 
-//        protected override void OnModelCreating(ModelBuilder modelBuilder)
-//        {
-//            modelBuilder.Entity<Student>(b =>
-//            {
-//                b.HasKey(s => s.Id);
-//                b.Property(s => s.FirstName).HasMaxLength(100).IsRequired();
-//                b.Property(s => s.LastName).HasMaxLength(100);
-//                b.Property(s => s.Age).IsRequired();
-//            });
-//        }
-//    }
-//}
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.Student)
+                .WithMany(s => s.Enrollments)
+                .HasForeignKey(e => e.StudentId);
+
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.Course)
+                .WithMany(c => c.Enrollments)
+                .HasForeignKey(e => e.CourseId);
+        }
+    }
+}

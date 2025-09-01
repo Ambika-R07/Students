@@ -32,7 +32,7 @@ namespace SMS.WebApi.Middleware
                 var response = new
                 {
                     StatusCode = context.Response.StatusCode,
-                    Message = "An unexpected error occurred. Please contact support.",
+                    Message = "An unexpected error occurred. Please contact support."+ex.Message,
                     TraceId = context.TraceIdentifier
                 };
 

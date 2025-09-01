@@ -1,34 +1,170 @@
-﻿//using SMS.Services.Interfaces;
-//using SMS.Domain.Entities;
-//using System.Collections.Generic;
-//using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using SMS.Infrastructure.Data;
+using SMS.Infrastructure.Dto;
+using SMS.Services.Interfaces;
+using SMS.WebApi.Domain;
 
-//namespace SMS.Services.Implementations
-//{
-//    public class StudentService : IStudentService
-//    {
-//        private readonly IStudentRepository _repo;
-//        public StudentService(IStudentRepository repo) => _repo = repo;
+namespace SMS.Services
+{
+    public class StudentService : IStudentService
+    {
+        private readonly AppDbContext _db;
 
-//        public async Task<Student> CreateAsync(Student student) => await _repo.CreateAsync(student);
+        public StudentService(AppDbContext db)
+        {
+            _db = db;
+        }
 
-//        public async Task<bool> DeleteAsync(int id) => await _repo.DeleteAsync(id);
+        public async Task<StudentResponseDto> CreateAsync(StudentCreateDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
+                throw new ArgumentException("FirstName and LastName are required.");
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                throw new ArgumentException("Email is required.");
+            if (!new[] { "M", "F", "O" }.Contains(dto.Gender))
+                throw new ArgumentException("Gender must be one of M/F/O.");
 
-//        public async Task<IEnumerable<Student>> GetAllAsync() => await _repo.GetAllAsync();
+            var emailExists = await _db.Students.AnyAsync(s => s.Email == dto.Email);
+            if (emailExists) throw new ArgumentException("Email already exists.");
 
-//        public async Task<Student?> GetByIdAsync(int id) => await _repo.GetByIdAsync(id);
+            var entity = new Student
+            {
+                
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                DateOfBirth = dto.DateOfBirth,
+                Gender = dto.Gender,
+                Enrollments = dto.CourseIds.Select(courseId => new Enrollment
+                {
+                    CourseId = courseId,
+                    EnrollmentDate = DateTime.UtcNow,
+                    IsActive = true
+                }).ToList()
+            };
 
-//        public async Task<bool> UpdateAsync(int id, Student student)
-//        {
-//            var existing = await _repo.GetByIdAsync(id);
-//            if (existing == null) return false;
+            _db.Students.Add(entity);
+            await _db.SaveChangesAsync();
 
-//            // map changes
-//            existing.FirstName = student.FirstName;
-//            existing.LastName = student.LastName;
-//            existing.Age = student.Age;
+            entity = await _db.Students
+                .Include(x => x.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .FirstAsync(x => x.StudentId == entity.StudentId);
 
-//            return await _repo.UpdateAsync(existing);
-//        }
-//    }
-//}
+            return MapToResponse(entity);
+        }
+
+        public async Task<List<StudentResponseDto>> GetAllAsync()
+        {
+            var students = await _db.Students
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .ToListAsync();
+
+            return students.Select(MapToResponse).ToList();
+        }
+
+        public async Task<StudentResponseDto> GetByIdAsync(int id)
+        {
+            var entity = await _db.Students
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .FirstOrDefaultAsync(s => s.StudentId == id);
+
+            if (entity == null) throw new KeyNotFoundException($"Student with id {id} not found.");
+            return MapToResponse(entity);
+        }
+
+        public async Task<StudentResponseDto> UpdateAsync(int id, StudentUpdateDto dto)
+        {
+            var entity = await _db.Students
+                .Include(s => s.Enrollments)
+                .FirstOrDefaultAsync(s => s.StudentId == id);
+
+            if (entity == null) throw new KeyNotFoundException($"Student with id {id} not found.");
+
+            
+            entity.FirstName = dto.FirstName;
+            entity.LastName = dto.LastName;
+            entity.Email = dto.Email;
+            entity.DateOfBirth = dto.DateOfBirth;
+            entity.Gender = dto.Gender;
+
+            _db.Enrollments.RemoveRange(entity.Enrollments);
+
+            entity.Enrollments = dto.CourseIds.Select(courseId => new Enrollment
+            {
+                CourseId = courseId,
+                EnrollmentDate = DateTime.UtcNow,
+                IsActive = true
+            }).ToList();
+
+            await _db.SaveChangesAsync();
+
+            entity = await _db.Students
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .FirstAsync(s => s.StudentId == id);
+
+            return MapToResponse(entity);
+        }
+
+        public async Task<StudentResponseDto> PatchAsync(int id, StudentPatchDto dto)
+        {
+            var entity = await _db.Students
+                .Include(s => s.Enrollments)
+                .FirstOrDefaultAsync(s => s.StudentId == id);
+
+            if (entity == null) throw new KeyNotFoundException($"Student with id {id} not found.");
+
+            if (!string.IsNullOrWhiteSpace(dto.FirstName)) entity.FirstName = dto.FirstName;
+            if (!string.IsNullOrWhiteSpace(dto.LastName)) entity.LastName = dto.LastName;
+            if (!string.IsNullOrWhiteSpace(dto.Email)) entity.Email = dto.Email;
+            if (!string.IsNullOrWhiteSpace(dto.Gender)) entity.Gender = dto.Gender;
+            if (dto.DateOfBirth.HasValue) entity.DateOfBirth = dto.DateOfBirth.Value;
+
+            await _db.SaveChangesAsync();
+
+            entity = await _db.Students
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .FirstAsync(s => s.StudentId == id);
+
+            return MapToResponse(entity);
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var entity = await _db.Students.FindAsync(id);
+            if (entity == null) return false;
+
+            _db.Students.Remove(entity);
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        private static StudentResponseDto MapToResponse(Student entity)
+        {
+            return new StudentResponseDto
+            {
+                StudentId = entity.StudentId,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                Email = entity.Email,
+                DateOfBirth = entity.DateOfBirth,
+                Gender = entity.Gender,
+                Enrollments = entity.Enrollments.Select(e => new EnrollmentDto
+                {
+                    EnrollmentId = e.EnrollmentId,
+                    CourseId = e.CourseId,
+                    Course = e.Course == null ? null : new CourseDto
+                    {
+                        CourseId = e.Course.CourseId,
+                        CourseName = e.Course.CourseName,
+                        Credits = e.Course.Credits
+                    }
+                }).ToList()
+            };
+        }
+    }
+}
