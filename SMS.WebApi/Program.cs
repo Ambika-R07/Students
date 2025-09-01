@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using SMS.Infrastructure.Data;
+using SMS.Services;
+using SMS.Services.Interfaces;
 using SMS.WebApi.Middleware;
 
 try
@@ -32,6 +36,9 @@ try
             Description = "Demo API with global exception handling"
         });
     });
+    builder.Services.AddScoped<IStudentService, StudentService>();
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
     var app = builder.Build();
 

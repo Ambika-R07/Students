@@ -1,15 +1,15 @@
-﻿//using SMS.Domain.Entities;
-//using System.Collections.Generic;
-//using System.Threading.Tasks;
+﻿using SMS.Infrastructure.Dto;
 
-//namespace SMS.Services.Interfaces
-//{
-//    public interface IStudentService
-//    {
-//        Task<IEnumerable<Student>> GetAllAsync();
-//        Task<Student?> GetByIdAsync(int id);
-//        Task<Student> CreateAsync(Student student);
-//        Task<bool> UpdateAsync(int id, Student student);
-//        Task<bool> DeleteAsync(int id);
-//    }
-//}
+namespace SMS.Services.Interfaces
+{
+    public interface IStudentService
+    {
+        Task<StudentResponseDto> CreateAsync(StudentCreateDto dto);
+        Task<List<StudentResponseDto>> GetAllAsync();
+        Task<StudentResponseDto> UpdateAsync(int id, StudentUpdateDto dto);
+        Task<StudentResponseDto> PatchAsync(int id, StudentPatchDto dto);
+        Task<StudentResponseDto> GetByIdAsync(int id);
+        Task<bool> DeleteAsync(int id);
+
+    }
+}
