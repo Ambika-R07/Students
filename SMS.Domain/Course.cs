@@ -4,6 +4,7 @@ namespace SMS.WebApi.Domain
 {
     public class Course
     {
+        [Key]
         public int CourseId { get; set; }
 
         public int Credits { get; set; }
