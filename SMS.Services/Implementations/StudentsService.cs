@@ -45,7 +45,7 @@ namespace SMS.Services
             _db.Students.Add(entity);
             await _db.SaveChangesAsync();
 
-            // 🚀 Build response manually (no Include reload)
+          
             var response = new StudentResponseDto
             {
                 StudentId = entity.StudentId,
