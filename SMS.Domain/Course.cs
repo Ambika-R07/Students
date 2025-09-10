@@ -9,7 +9,6 @@ namespace SMS.WebApi.Domain
 
         public int Credits { get; set; }
 
-
         [Required, MaxLength(100)]
         public string CourseName { get; set; } = string.Empty;
 
