@@ -6,9 +6,8 @@ namespace SMS.WebApi.Domain
     public class Student
     {
 
-        
+        [Key]
         public int StudentId { get; set; }
-        //public int StudentId { get; set; }
 
         [Required, MaxLength(50)]
         public string FirstName { get; set; } = string.Empty;
@@ -36,6 +35,7 @@ namespace SMS.WebApi.Domain
 
         public DateTime? UpdatedAt { get; set; }
 
-        public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+        public List<Enrollment> Enrollments { get; set; } = new();
+
     }
 }

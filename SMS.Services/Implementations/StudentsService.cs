@@ -29,7 +29,6 @@ namespace SMS.Services
 
             var entity = new Student
             {
-                
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
@@ -46,12 +45,32 @@ namespace SMS.Services
             _db.Students.Add(entity);
             await _db.SaveChangesAsync();
 
-            entity = await _db.Students
-                .Include(x => x.Enrollments)
-                    .ThenInclude(e => e.Course)
-                .FirstAsync(x => x.StudentId == entity.StudentId);
+          
+            var response = new StudentResponseDto
+            {
+                StudentId = entity.StudentId,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                Email = entity.Email,
+                DateOfBirth = entity.DateOfBirth,
+                Gender = entity.Gender,
+                Enrollments = entity.Enrollments.Select(e => new EnrollmentDto
+                {
+                    EnrollmentId = e.EnrollmentId,
+                    CourseId = e.CourseId,
+                    Course = _db.Courses
+                        .Where(c => c.CourseId == e.CourseId)
+                        .Select(c => new CourseDto
+                        {
+                            CourseId = c.CourseId,
+                            CourseName = c.CourseName,
+                            Credits = c.Credits
+                        })
+                        .FirstOrDefault()
+                }).ToList()
+            };
 
-            return MapToResponse(entity);
+            return response;
         }
 
         public async Task<List<StudentResponseDto>> GetAllAsync()
@@ -83,7 +102,6 @@ namespace SMS.Services
 
             if (entity == null) throw new KeyNotFoundException($"Student with id {id} not found.");
 
-            
             entity.FirstName = dto.FirstName;
             entity.LastName = dto.LastName;
             entity.Email = dto.Email;
@@ -101,12 +119,32 @@ namespace SMS.Services
 
             await _db.SaveChangesAsync();
 
-            entity = await _db.Students
-                .Include(s => s.Enrollments)
-                    .ThenInclude(e => e.Course)
-                .FirstAsync(s => s.StudentId == id);
+            
+            var response = new StudentResponseDto
+            {
+                StudentId = entity.StudentId,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                Email = entity.Email,
+                DateOfBirth = entity.DateOfBirth,
+                Gender = entity.Gender,
+                Enrollments = entity.Enrollments.Select(e => new EnrollmentDto
+                {
+                    EnrollmentId = e.EnrollmentId,
+                    CourseId = e.CourseId,
+                    Course = _db.Courses
+                        .Where(c => c.CourseId == e.CourseId)
+                        .Select(c => new CourseDto
+                        {
+                            CourseId = c.CourseId,
+                            CourseName = c.CourseName,
+                            Credits = c.Credits
+                        })
+                        .FirstOrDefault()
+                }).ToList()
+            };
 
-            return MapToResponse(entity);
+            return response;
         }
 
         public async Task<StudentResponseDto> PatchAsync(int id, StudentPatchDto dto)
@@ -124,11 +162,6 @@ namespace SMS.Services
             if (dto.DateOfBirth.HasValue) entity.DateOfBirth = dto.DateOfBirth.Value;
 
             await _db.SaveChangesAsync();
-
-            entity = await _db.Students
-                .Include(s => s.Enrollments)
-                    .ThenInclude(e => e.Course)
-                .FirstAsync(s => s.StudentId == id);
 
             return MapToResponse(entity);
         }
